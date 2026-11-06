@@ -4,5 +4,5 @@
 //  (la que termina en /exec, la misma que usas en el Site).
 // ===================================================================
 window.PADELWARS = {
-  WEB: 'PEGA_AQUI_LA_DIRECCION/exec',
+  WEB: 'https://script.google.com/macros/s/AKfycbzELuqFxxkd6r4-oiXum4qrfINnS69bI6QAnWme2Lusl38BSvt5gWQ-Fk9okRUtsGl4/exec',
 };
