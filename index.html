@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Padel Wars</title>
+<meta name="description" content="Disponibilidad, calendario, ranking y retos de Padel Wars.">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Padel Wars">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<script src="config.js"></script>
+<style>
+  :root { --y:#FFE81F; --ink:#ECECEC; --muted:#8E9097; --bar:#050505; --line:rgba(255,232,31,.28);
+          --top:env(safe-area-inset-top, 0px); --bot:env(safe-area-inset-bottom, 0px); }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; height:100%; background:#000; color:var(--ink); font-family:"Exo 2",-apple-system,"Segoe UI",Roboto,Arial,sans-serif; overflow:hidden; }
+  :focus-visible { outline:2px solid var(--y); outline-offset:2px; }
+
+  /* barra de arriba */
+  .top { position:fixed; left:0; right:0; top:0; z-index:5; height:calc(48px + var(--top)); padding:var(--top) 10px 0 12px;
+    display:flex; align-items:center; gap:10px; background:var(--bar); border-bottom:2px solid var(--y); }
+  .top img { width:28px; height:28px; border-radius:7px; }
+  .top h1 { flex:1; margin:0; font:800 17px/1 -apple-system,"Segoe UI",Roboto,Arial,sans-serif; letter-spacing:2px; text-transform:uppercase; color:var(--y);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .top button { width:40px; height:40px; border:0; background:transparent; color:var(--muted); border-radius:10px; cursor:pointer; display:grid; place-items:center; }
+  .top button:active { background:rgba(255,232,31,.12); color:var(--y); }
+  .top button.gira svg { animation:gira .8s linear infinite; }
+  @keyframes gira { to { transform:rotate(360deg); } }
+
+  /* contenido: una página por pestaña (se cargan la primera vez que se abren y se quedan) */
+  .vistas { position:fixed; left:0; right:0; top:calc(48px + var(--top)); bottom:calc(62px + var(--bot)); background:#000; }
+  .vistas iframe { position:absolute; inset:0; width:100%; height:100%; border:0; background:#000; visibility:hidden; }
+  .vistas iframe.on { visibility:visible; }
+  .carga { position:absolute; inset:0; display:grid; place-items:center; pointer-events:none; }
+  .carga[hidden] { display:none; }
+  .bola { width:34px; height:34px; border-radius:50%; background:var(--y); box-shadow:0 0 22px rgba(255,232,31,.6); animation:bota .7s ease-in-out infinite alternate; }
+  @keyframes bota { from { transform:translateY(-14px); } to { transform:translateY(14px); } }
+
+  /* barra de pestañas */
+  nav { position:fixed; left:0; right:0; bottom:0; z-index:5; height:calc(62px + var(--bot)); padding-bottom:var(--bot);
+    display:grid; grid-template-columns:repeat(5,1fr); background:var(--bar); border-top:1px solid var(--line); }
+  nav button { border:0; background:transparent; color:var(--muted); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+    font:600 10.5px -apple-system,"Segoe UI",Roboto,Arial,sans-serif; letter-spacing:.3px; cursor:pointer; padding:0; }
+  nav button svg { width:24px; height:24px; }
+  nav button.on { color:var(--y); }
+  nav button.on svg { filter:drop-shadow(0 0 6px rgba(255,232,31,.55)); }
+
+  /* hoja "Más" */
+  .velo { position:fixed; inset:0; z-index:8; background:rgba(0,0,0,.6); opacity:0; pointer-events:none; transition:opacity .2s; }
+  .velo.on { opacity:1; pointer-events:auto; }
+  .hoja { position:fixed; left:0; right:0; bottom:0; z-index:9; background:#0B0B0D; border-top:2px solid var(--y); border-radius:18px 18px 0 0;
+    padding:10px 14px calc(18px + var(--bot)); transform:translateY(105%); transition:transform .22s ease; }
+  .hoja.on { transform:none; }
+  .hoja .asa { width:42px; height:5px; border-radius:3px; background:rgba(255,255,255,.25); margin:0 auto 12px; }
+  .hoja button { width:100%; display:flex; align-items:center; gap:14px; padding:14px 8px; border:0; border-bottom:1px solid rgba(255,255,255,.08);
+    background:transparent; color:var(--ink); font:600 16px -apple-system,"Segoe UI",Roboto,Arial,sans-serif; text-align:left; cursor:pointer; }
+  .hoja button:last-child { border-bottom:0; }
+  .hoja button .ic { width:38px; height:38px; border-radius:10px; display:grid; place-items:center; background:rgba(255,232,31,.1); border:1px solid var(--line); font-size:19px; flex:none; }
+  .hoja button small { display:block; color:var(--muted); font-weight:500; font-size:12.5px; margin-top:2px; }
+  .hoja button.on { color:var(--y); }
+
+  /* aviso para instalar */
+  .instala { position:fixed; left:10px; right:10px; bottom:calc(72px + var(--bot)); z-index:7; background:#111; border:1px solid var(--y); border-radius:14px;
+    padding:12px 12px 12px 14px; display:flex; gap:12px; align-items:center; box-shadow:0 10px 30px rgba(0,0,0,.6), 0 0 18px rgba(255,232,31,.15); }
+  .instala[hidden] { display:none; }
+  .instala img { width:44px; height:44px; border-radius:10px; flex:none; }
+  .instala div { flex:1; font-size:13.5px; line-height:1.4; }
+  .instala b { color:var(--y); }
+  .instala .si { border:0; background:var(--y); color:#000; font:800 13px -apple-system,sans-serif; padding:9px 12px; border-radius:9px; cursor:pointer; flex:none; }
+  .instala .x { border:0; background:transparent; color:var(--muted); font-size:22px; cursor:pointer; padding:0 4px; flex:none; }
+
+  .falta { position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:24px; text-align:center; background:#000; }
+  .falta b { color:var(--y); font-size:20px; display:block; margin-bottom:8px; }
+</style>
+</head>
+<body>
+<header class="top">
+  <img src="icons/apple-touch-icon.png" alt="">
+  <h1 id="tit">Padel Wars</h1>
+  <button id="recarga" aria-label="Recargar esta página" title="Recargar">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+  </button>
+</header>
+
+<main class="vistas" id="vistas"><div class="carga" id="carga" hidden><div class="bola"></div></div></main>
+
+<nav id="nav" aria-label="Secciones"></nav>
+
+<div class="velo" id="velo"></div>
+<div class="hoja" id="hoja" role="dialog" aria-label="Más secciones"><div class="asa"></div><div id="mas"></div></div>
+
+<div class="instala" id="instala" hidden>
+  <img src="icons/icon-192.png" alt="">
+  <div id="instTxt"></div>
+  <button class="si" id="instSi" hidden>Instalar</button>
+  <button class="x" id="instX" aria-label="Cerrar">×</button>
+</div>
+
+<script>
+  var CFG = window.PADELWARS || {}, WEB = String(CFG.WEB || '').trim();
+  var I = {   // iconos de la barra
+    inicio: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-6h4v6"/>',
+    dispo: '<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16.5 9.5"/>',
+    calendario: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+    ranking: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v1.5A3.5 3.5 0 0 0 7.5 11M17 6h3v1.5a3.5 3.5 0 0 1-3.5 3.5"/>',
+    mas: '<circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/>'
+  };
+  // Pestañas de abajo y lo que hay en "Más". q = lo que va detrás de /exec
+  var PAG = {
+    inicio:       { t:'Padel Wars',      q:'?iniciosite',       barra:'inicio',     txt:'Inicio' },
+    dispo:        { t:'Disponibilidad',  q:'?versite',          barra:'dispo',      txt:'Disponible' },
+    calendario:   { t:'Calendario',      q:'?calendariosite',   barra:'calendario', txt:'Calendario' },
+    ranking:      { t:'Ranking',         q:'?rankingsite',      barra:'ranking',    txt:'Ranking' },
+    convocatoria: { t:'Convocatoria',    q:'?convocatoriasite', barra:'mas', ic:'📋', sub:'Quién juega y con quién' },
+    retos:        { t:'Retos',           q:'?retossite',        barra:'mas', ic:'⚔️', sub:'La escalera, tus retos y las normas' },
+    veteranas:    { t:'Veteranas',       q:'?vetsite',          barra:'mas', ic:'⭐', sub:'Disponibilidad de los miércoles' },
+    capitanes:    { t:'Capitanes',       q:'?admin',            barra:'mas', ic:'🛡️', sub:'Solo capitanes (con contraseña)' }
+  };
+  var BARRA = ['inicio','dispo','calendario','ranking','mas'];
+  var MAS = ['convocatoria','retos','veteranas','capitanes'];
+  var ACT = null, FR = {};
+  function $(id){ return document.getElementById(id); }
+
+  if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(WEB)) {
+    document.body.insertAdjacentHTML('beforeend', '<div class="falta"><div><b>Falta un paso</b>Abre el archivo <code>config.js</code> y pega la dirección de tu web (la que termina en /exec).</div></div>');
+  }
+
+  // ---- barra de abajo y hoja "Más"
+  $('nav').innerHTML = BARRA.map(function(k){
+    var txt = k === 'mas' ? 'Más' : PAG[k].txt;
+    return '<button data-k="'+k+'" aria-label="'+txt+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+I[k]+'</svg>'+txt+'</button>';
+  }).join('');
+  $('mas').innerHTML = MAS.map(function(k){
+    return '<button data-k="'+k+'"><span class="ic">'+PAG[k].ic+'</span><span>'+PAG[k].t+'<small>'+PAG[k].sub+'</small></span></button>';
+  }).join('');
+  $('nav').addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.k === 'mas') { abrirMas(); return; }
+    ir(b.dataset.k);
+  });
+  $('mas').addEventListener('click', function(e){ var b = e.target.closest('button'); if (b) { cerrarMas(); ir(b.dataset.k); } });
+  $('velo').addEventListener('click', cerrarMas);
+  function abrirMas(){ $('velo').classList.add('on'); $('hoja').classList.add('on'); }
+  function cerrarMas(){ $('velo').classList.remove('on'); $('hoja').classList.remove('on'); }
+
+  // ---- ir a una página (se carga solo la primera vez; luego se queda como estaba)
+  function ir(k, sinHistorial){
+    if (!PAG[k]) k = 'inicio';
+    var p = PAG[k];
+    if (!FR[k]) {
+      var f = document.createElement('iframe');
+      f.title = p.t; f.allow = 'clipboard-write'; f.referrerPolicy = 'no-referrer-when-downgrade';
+      f.addEventListener('load', function(){ if (ACT === k) $('carga').hidden = true; $('recarga').classList.remove('gira'); });
+      f.src = WEB + p.q;
+      $('vistas').appendChild(f);
+      FR[k] = f;
+      $('carga').hidden = false;
+    } else $('carga').hidden = true;
+    Object.keys(FR).forEach(function(x){ FR[x].classList.toggle('on', x === k); });
+    ACT = k;
+    $('tit').textContent = p.t;
+    Array.prototype.forEach.call($('nav').children, function(b){ b.classList.toggle('on', b.dataset.k === p.barra); });
+    Array.prototype.forEach.call($('mas').children, function(b){ b.classList.toggle('on', b.dataset.k === k); });
+    try { localStorage.setItem('pwTab', k); } catch (e) {}
+    if (!sinHistorial) try { history.pushState({ k:k }, '', '#' + k); } catch (e) {}
+  }
+  // botón atrás del móvil: vuelve a la página anterior
+  window.addEventListener('popstate', function(e){ cerrarMas(); ir((e.state && e.state.k) || 'inicio', true); });
+
+  // ---- recargar la página que estás viendo
+  $('recarga').addEventListener('click', function(){
+    var f = FR[ACT]; if (!f) return;
+    $('recarga').classList.add('gira'); $('carga').hidden = false;
+    f.src = WEB + PAG[ACT].q + (PAG[ACT].q.indexOf('?') > -1 ? '&' : '?') + 't=' + Date.now();
+  });
+
+  // ---- las páginas de dentro avisan y piden cambiar de pestaña (por ejemplo, los accesos del Inicio)
+  var ALIAS = { disponibilidad:'dispo', ver:'dispo', calendario:'calendario', ranking:'ranking', veteranas:'veteranas', retos:'retos', convocatoria:'convocatoria', capitanes:'capitanes', inicio:'inicio' };
+  window.addEventListener('message', function(e){
+    var d = e.data || {};
+    if (!/\.google(usercontent)?\.com$/.test(new URL(e.origin).hostname)) return;
+    if (d.pw === 'listo' && e.source) e.source.postMessage({ pw:'app' }, '*');
+    if (d.pw === 'ir' && ALIAS[d.k]) ir(ALIAS[d.k]);
+  });
+
+  // ---- arranque
+  var ini = (location.hash || '').slice(1);
+  try { if (!PAG[ini]) ini = localStorage.getItem('pwTab') || 'inicio'; } catch (e) { ini = 'inicio'; }
+  try { history.replaceState({ k: PAG[ini] ? ini : 'inicio' }, '', '#' + (PAG[ini] ? ini : 'inicio')); } catch (e) {}
+  ir(PAG[ini] ? ini : 'inicio', true);
+
+  // ---- instalar en la pantalla de inicio
+  var instalada = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  var ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var cerrado = false; try { cerrado = localStorage.getItem('pwInstX') === '1'; } catch (e) {}
+  var evInst = null;
+  function avisoInstalar(txt, boton){ if (instalada || cerrado) return; $('instTxt').innerHTML = txt; $('instSi').hidden = !boton; $('instala').hidden = false; }
+  window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); evInst = e; avisoInstalar('<b>Instala Padel Wars</b> en tu móvil y ábrela como una app.', true); });
+  $('instSi').addEventListener('click', function(){ if (!evInst) return; evInst.prompt(); evInst.userChoice.then(function(){ $('instala').hidden = true; evInst = null; }); });
+  $('instX').addEventListener('click', function(){ $('instala').hidden = true; try { localStorage.setItem('pwInstX', '1'); } catch (e) {} });
+  if (ios && !instalada) setTimeout(function(){
+    avisoInstalar('<b>Instálala:</b> pulsa <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFE81F" stroke-width="2.2" style="vertical-align:-2px"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v8h14v-8"/></svg> <b>Compartir</b> y luego <b>"Añadir a pantalla de inicio"</b>.', false);
+  }, 1500);
+
+  if ('serviceWorker' in navigator) window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+</script>
+</body>
+</html>
